@@ -1,3 +1,6 @@
+import Ball from "./Ball.js";
+import KeyListener from "./KeyListener.js";
+
 console.log('Javascript is working!');
 
 /**
@@ -5,6 +8,8 @@ console.log('Javascript is working!');
  */
 class Game {
   private canvas: HTMLCanvasElement;
+
+  private ctx: CanvasRenderingContext2D;
 
   private ballRadius: number;
 
@@ -18,7 +23,11 @@ class Game {
 
   private playerPositionX: number;
 
+  private player: Ball;
+
   private lastTickTimeStamp : number;
+
+  private keyboard : KeyListener
 
   /**
    * Construc a new instance of this class
@@ -32,6 +41,7 @@ class Game {
     this.canvas.width = window.innerWidth - 1;
     this.canvas.height = window.innerHeight - 4;
 
+    this.ctx = this.canvas.getContext('2d');
     // Spawn a Ball
     this.ballRadius = 25 + 25 * Math.random();
     this.ballSpeedX = -5 + 10 * Math.random();
@@ -42,6 +52,9 @@ class Game {
 
     // Set the player at the center
     this.playerPositionX = this.canvas.width / 2;
+    this.player = new Ball('red', 50, {x: 50, y: 50}, {x: 0, y: 0}, this.ctx)
+    // Get Keyboard Listener
+    this.keyboard = new KeyListener()
   }
 
   /**
@@ -109,24 +122,23 @@ class Game {
 
     // draw: the items on the canvas
     // Get the canvas rendering context
-    const ctx = this.canvas.getContext('2d');
     // Clear the entire canvas
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // Draw the player
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
+    this.ctx.fillStyle = 'red';
+    this.ctx.beginPath();
     const playerPositionY = this.canvas.height - 50;
-    ctx.ellipse(this.playerPositionX, playerPositionY, 50, 50, 0, 0, 2 * Math.PI);
-    ctx.fill();
+    this.ctx.ellipse(this.playerPositionX, playerPositionY, 50, 50, 0, 0, 2 * Math.PI);
+    this.ctx.fill();
 
     // Draw the ball
-    ctx.fillStyle = 'blue';
-    ctx.beginPath();
+    this.ctx.fillStyle = 'blue';
+    this.ctx.beginPath();
     // reverse height, so the ball falls down
     const y = this.canvas.height - this.ballPositionY;
-    ctx.ellipse(this.ballPositionX, y, this.ballRadius, this.ballRadius, 0, 0, 2 * Math.PI);
-    ctx.fill();
+    this.ctx.ellipse(this.ballPositionX, y, this.ballRadius, this.ballRadius, 0, 0, 2 * Math.PI);
+    this.ctx.fill();
 
     // Call this method again on the next animation frame
     if (!gameover) {
