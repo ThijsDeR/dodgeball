@@ -164,6 +164,10 @@ export default class GameLoop {
     }
 
     // Handle time measurement and analysis
+    this.timeAnalysis(timestamp)
+  };
+
+  private timeAnalysis(timestamp: number){
     const now = performance.now();
     const stepTime = timestamp - now;
     const frameTime = now - this.frameEnd;
@@ -172,5 +176,5 @@ export default class GameLoop {
     this.frameEnd = now;
     this.gameTime = now - this.gameStart;
     this.frameCount += 1;
-  };
+  }
 }
