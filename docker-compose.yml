@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-    ts-app:
+    dodgeball-app:
         working_dir: /app
         image: 'node:lts'
         volumes:

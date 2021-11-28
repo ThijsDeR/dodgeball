@@ -1,5 +1,5 @@
-import GameLoop from "./GameLoop";
-import Scene from "./Scene";
+import GameLoop from './GameLoop.js';
+import Scene from './Scene.js';
 
 /**
  * Main class of this Game.
@@ -23,14 +23,19 @@ export default class Game {
 
   public static readonly BALL_COLOR: string = 'blue';
 
+  public static readonly BALL_COLORS: string[] = ['green', 'purple', 'blue'];
+
   public static readonly PLAYER_RADIUS: number = 50;
 
   public static readonly PLAYER_COLOR: string = 'red';
 
+  public static readonly PLAYER_SPEED: number = 15;
+
   private scene: Scene;
 
   private gameLoop: GameLoop;
-  
+
+  private score: number;
 
   /**
    * Construc a new instance of this class
@@ -38,18 +43,17 @@ export default class Game {
    * @param canvas the canvas to render on
    */
   public constructor(canvas: HTMLCanvasElement) {
-    this.scene = new Scene(canvas)
-    this.gameLoop = new GameLoop(this.scene)
+    this.scene = new Scene(canvas);
+    this.gameLoop = new GameLoop(this.scene);
   }
 
   /**
    * Start the game.
    */
-   public start(): void {
+  public start(): void {
     // Start the animation
     console.log('start animation');
     // Set the last tick timestamp to current time
-    this.gameLoop.start()
+    this.gameLoop.start();
   }
-  
 }

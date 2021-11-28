@@ -1,4 +1,3 @@
-import Game from './Game.js';
 import Scene from './Scene.js';
 
 /**

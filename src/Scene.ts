@@ -1,134 +1,124 @@
-import Game from "./Game";
+import Ball from './Ball.js';
+import Game from './Game.js';
+import KeyListener from './KeyListener.js';
+import Player from './Player.js';
 
 export default class Scene {
   private canvas: HTMLCanvasElement;
 
-  private ballRadius: number;
+  private balls: Ball[];
 
-  private ballPositionX: number;
+  private player: Player;
 
-  private ballPositionY: number;
+  private keyboard: KeyListener;
 
-  private ballSpeedX: number;
-
-  private ballSpeedY: number;
-
-  private playerPositionX: number;
-  
+  /**
+   * lol
+   *
+   * @param canvas sheesh
+   */
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
 
     // Resize the canvas to full window size
-    this.canvas.width = window.innerWidth - 1;
-    this.canvas.height = window.innerHeight - 4;
-
-    this.createBall();
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
 
     // Set the player at the center
-    this.playerPositionX = this.canvas.width / 2;
-  }
-    /**
-   * Spawn a ball
-   */
-  private createBall() {
-    this.ballRadius = Game.MIN_BALL_RADIUS + Game.BALL_RADIUS_SCATTER * Math.random();
-    this.ballSpeedX = Game.MIN_BALL_X_SPEED + Game.BALL_X_SPEED_SCATTER * Math.random();
-    this.ballSpeedY = Game.MIN_BALL_Y_SPEED;
-    this.ballPositionX = this.ballRadius
-      + (this.canvas.width - 2 * this.ballRadius) * Math.random();
-    this.ballPositionY = this.canvas.height * 0.8
-      + this.canvas.height * Game.BALL_POSITION_Y_AREA * Math.random();
+
+    this.keyboard = new KeyListener();
+
+    this.balls = [];
+    this.createBalls(2);
+
+    this.player = new Player(
+      Game.PLAYER_RADIUS,
+      this.canvas.width / 2,
+      Game.PLAYER_RADIUS,
+      'red',
+      'green',
+    );
   }
 
-  public processInput() {
-    
+  /**
+   * Spawn a ball
+   *
+   * @param amount lol
+   */
+  private createBalls(amount: number) {
+    for (let index = 0; index < amount; index++) {
+      const radius = Game.MIN_BALL_RADIUS + Game.BALL_RADIUS_SCATTER * Math.random();
+
+      this.balls.push(new Ball(
+        radius,
+        Game.MIN_BALL_X_SPEED + Game.BALL_X_SPEED_SCATTER * Math.random(),
+        Game.MIN_BALL_Y_SPEED,
+        radius + (this.canvas.width - 2 * radius) * Math.random(),
+        this.canvas.height * (1 - Game.BALL_POSITION_Y_AREA)
+          + this.canvas.height * (Game.BALL_POSITION_Y_AREA) * Math.random(),
+        Game.BALL_COLORS[Math.round(Game.BALL_COLORS.length * Math.random())],
+      ));
+    }
+  }
+
+  /**
+   * process input
+   */
+  public processInput(): void {
+    if (this.keyboard.isKeyDown(KeyListener.KEY_LEFT)) {
+      this.player.moveBallOnX(-Game.PLAYER_SPEED, this.canvas);
+    } if (this.keyboard.isKeyDown(KeyListener.KEY_RIGHT)) {
+      this.player.moveBallOnX(Game.PLAYER_SPEED, this.canvas);
+    }
   }
 
   /**
    * Renders the game state so player can see that balls
    */
-  public render() {
+  public render(): void {
     const ctx = this.canvas.getContext('2d');
     // Clear the entire canvas
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // Draw the player
-    ctx.fillStyle = Game.PLAYER_COLOR;
-    ctx.beginPath();
-    const playerPositionY = this.canvas.height - Game.PLAYER_RADIUS;
-    ctx.ellipse(
-      this.playerPositionX,
-      playerPositionY,
-      Game.PLAYER_RADIUS,
-      Game.PLAYER_RADIUS,
-      0,
-      0,
-      Game.FULL_CIRCLE,
-    );
-    ctx.fill();
+    this.player.render(this.canvas);
 
     // Draw the ball
-    ctx.fillStyle = Game.BALL_COLOR;
-    ctx.beginPath();
-    // reverse height, so the ball falls down
-    const y = this.canvas.height - this.ballPositionY;
-    ctx.ellipse(
-      this.ballPositionX,
-      y,
-      this.ballRadius,
-      this.ballRadius,
-      0,
-      0,
-      Game.FULL_CIRCLE,
-    );
-    ctx.fill();
+    this.balls.forEach((ball) => {
+      ball.render(this.canvas);
+    });
   }
 
   /**
    * Update the statuses of all the (moving) balls
    *
-   * @param timestamp no idea tbh
+   * @param lastTimeStamp lol
+   * @param elapsed no idea tbh
    * @returns boolean whether game is over or not
    */
-  public update(lastTimeStamp: number, timestamp: number): boolean {
-    const t = timestamp - lastTimeStamp;
+  public update(lastTimeStamp: number, elapsed: number): {gameOver: boolean, won: boolean} {
+    let status = { gameOver: false, won: false };
+    const playerLocation = this.player.getSelfBall().getLocation();
+    const playerHands = this.player.getHands();
+    this.balls.forEach((ball, ballIndex) => {
+      ball.applyPhysics(elapsed);
+      ball.bounceFromCanvasWalls(this.canvas);
+      [playerHands.leftHand, playerHands.rightHand].forEach((hand) => {
+        const handLocation = hand.getLocation()
+        if (ball.overlapsWith(handLocation.x, handLocation.y, handLocation.size)) {
+          this.balls.splice(ballIndex, 1);
+        }
+      });
+      if (this.balls.length === 0) {
+        status.gameOver = true;
+        status.won = true;
+      }
 
-    // move: calculate the new position of the ball
-    // Some physics here: the y-portion of the speed changes due to gravity
-    // Formula: Vt = V0 + gt
-    // 9.8 is the gravitational constant
-    this.ballSpeedY -= Game.GRAVITY * t;
-    // Calculate new X and Y parts of the position
-    // Formula: S = v*t
-    this.ballPositionX += this.ballSpeedX * t;
-    // Formula: S=v0*t + 0.5*g*t^2
-    this.ballPositionY += this.ballSpeedY * t + 0.5 * Game.GRAVITY * t * t;
+      if (ball.overlapsWith(playerLocation.x, playerLocation.y, playerLocation.size)) {
+        status.gameOver = true;
+      }
+    });
 
-    // collide: check if the ball hits the walls and let it bounce
-    // Left wall
-    if (this.ballPositionX <= this.ballRadius && this.ballSpeedX < 0) {
-      this.ballSpeedX = -this.ballSpeedX;
-    }
-    // Right wall
-    if (this.ballPositionX >= this.canvas.width - this.ballRadius
-      && this.ballSpeedX > 0) {
-      this.ballSpeedX = -this.ballSpeedX;
-    }
-
-    // Bottom only (ball will always come down)
-    if (this.ballPositionY <= this.ballRadius && this.ballSpeedY < 0) {
-      this.ballSpeedY = -this.ballSpeedY;
-    }
-
-    // adjust: Check if the ball collides with the player. It's game over
-    // then
-    const distX = this.playerPositionX - this.ballPositionX;
-    const distY = Game.PLAYER_RADIUS - this.ballPositionY;
-    // Calculate the distance between ball and player using Pythagoras'
-    // theorem
-    const distance = Math.sqrt(distX * distX + distY * distY);
-    // Collides is distance <= sum of radii of both circles
-    const gameover = distance <= (this.ballRadius + 50);
-    return gameover;
+    return status;
   }
 }
