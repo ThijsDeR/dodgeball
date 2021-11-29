@@ -1,41 +1,32 @@
 import Game from './Game.js';
+import Vector from './Vector.js';
 
 export default class Ball {
   private radius: number;
 
-  private positionX: number;
+  private position: Vector;
 
-  private positionY: number;
-
-  private speedX: number;
-
-  private speedY: number;
+  private speed: Vector;
 
   private color: string;
 
   /**
-   * wow
+   * l
    *
    * @param radius l
-   * @param speedX l
-   * @param speedY l
-   * @param posX l
-   * @param posY l
+   * @param speed l
+   * @param pos l
    * @param color l
    */
   public constructor(
     radius: number,
-    speedX: number,
-    speedY: number,
-    posX: number,
-    posY: number,
+    speed: Vector,
+    pos: Vector,
     color: string,
   ) {
     this.radius = radius;
-    this.speedX = speedX;
-    this.speedY = speedY;
-    this.positionX = posX;
-    this.positionY = posY;
+    this.speed = speed;
+    this.position = pos;
     this.color = color;
   }
 
@@ -49,12 +40,12 @@ export default class Ball {
     // Some physics here: the y-portion of the speed changes due to gravity
     // Formula: Vt = V0 + gt
     // 9.8 is the gravitational constant
-    this.speedY -= Game.GRAVITY * t;
+    this.speed.setY(this.speed.getY() - Game.BALL_SPEED * Game.GRAVITY * t);
     // Calculate new X and Y parts of the position
     // Formula: S = v*t
-    this.positionX += this.speedX * t;
+    this.position.setX(this.position.getX() + Game.BALL_SPEED * this.speed.getX() * t);
     // Formula: S=v0*t + 0.5*g*t^2
-    this.positionY += this.speedY * t + 0.5 * Game.GRAVITY * t * t;
+    this.position.setY(this.position.getY() + this.speed.getY() * t + 0.5 * Game.GRAVITY * t * t);
   }
 
   /**
@@ -65,18 +56,18 @@ export default class Ball {
   public bounceFromCanvasWalls(canvas: HTMLCanvasElement): void {
     // collide: check if the ball hits the walls and let it bounce
     // Left wall
-    if (this.positionX <= this.radius && this.speedX < 0) {
-      this.speedX = -this.speedX;
+    if (this.position.getX() <= this.radius && this.speed.getX() < 0) {
+      this.speed.setX(-this.speed.getX());
     }
     // Right wall
-    if (this.positionX >= canvas.width - this.radius
-      && this.speedX > 0) {
-      this.speedX = -this.speedX;
+    if (this.position.getX() >= canvas.width - this.radius
+      && this.speed.getX() > 0) {
+      this.speed.setX(-this.speed.getX());
     }
 
     // Bottom only (ball will always come down)
-    if (this.positionY <= this.radius && this.speedY < 0) {
-      this.speedY = -this.speedY;
+    if (this.position.getY() <= this.radius && this.speed.getY() < 0) {
+      this.speed.setY(-this.speed.getY());
     }
   }
 
@@ -91,8 +82,8 @@ export default class Ball {
   public overlapsWith(x: number, y:number, r: number): boolean {
     // adjust: Check if the ball collides with the player. It's game over
     // then
-    const distX = x - this.positionX;
-    const distY = y - this.positionY;
+    const distX = x - this.position.getX();
+    const distY = y - this.position.getY();
     // Calculate the distance between ball and player using Pythagoras'
     // theorem
     const distance = Math.sqrt(distX * distX + distY * distY);
@@ -111,8 +102,8 @@ export default class Ball {
     ctx.fillStyle = this.color;
     ctx.beginPath();
     // reverse height, so the ball falls down
-    const y = canvas.height - this.positionY;
-    ctx.ellipse(this.positionX, y, this.radius, this.radius, 0, 0,
+    const y = canvas.height - this.position.getY();
+    ctx.ellipse(this.position.getX(), y, this.radius, this.radius, 0, 0,
       2 * Game.FULL_CIRCLE);
     ctx.fill();
   }
@@ -123,7 +114,7 @@ export default class Ball {
    * @returns location data
    */
   public getLocation(): { x: number, y: number, size: number } {
-    return { x: this.positionX, y: this.positionY, size: this.radius };
+    return { x: this.position.getX(), y: this.position.getY(), size: this.radius };
   }
 
   /**
@@ -133,6 +124,24 @@ export default class Ball {
    * @param canvas amount
    */
   public moveBallOnX(amount: number): void {
-    this.positionX += amount;
+    this.position.setX(this.position.getX() + amount);
+  }
+
+  /**
+   * l
+   *
+   * @returns l
+   */
+  public getSpeed(): Vector {
+    return this.speed;
+  }
+
+  /**
+   * l
+   *
+   * @param vector l
+   */
+  public setSpeed(vector: Vector): void {
+    this.speed = vector;
   }
 }

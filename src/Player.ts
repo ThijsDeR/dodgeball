@@ -1,4 +1,5 @@
 import Ball from './Ball.js';
+import Vector from './Vector.js';
 
 export default class Player {
   private selfBall: Ball;
@@ -24,26 +25,20 @@ export default class Player {
   ) {
     this.selfBall = new Ball(
       radius,
-      0,
-      0,
-      posX,
-      posY,
+      new Vector(0,0),
+      new Vector(posX, posY),
       color,
     );
     this.leftHand = new Ball(
       radius,
-      0,
-      0,
-      posX - (radius * 2),
-      posY,
+      new Vector(0, 0),
+      new Vector(posX - (radius * 2), posY),
       handsColor,
     );
     this.rightHand = new Ball(
       radius,
-      0,
-      0,
-      posX + (radius * 2),
-      posY,
+      new Vector(0, 0),
+      new Vector(posX + (radius * 2), posY),
       handsColor,
     );
   }

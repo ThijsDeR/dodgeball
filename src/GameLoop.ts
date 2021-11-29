@@ -90,8 +90,10 @@ export default class GameLoop {
 
   /**
    * Start the game loop.
+   *
+   * @param enemyAmount s
    */
-  public start(): void {
+  public start(enemyAmount: number): void {
     if (this.state === GameLoop.STATE_IDLE) {
       this.state = GameLoop.STATE_STARTING;
       this.gameStart = performance.now();
@@ -99,6 +101,7 @@ export default class GameLoop {
       this.previousElapsed = this.gameStart;
       this.gameTime = 0;
       this.frameCount = 0;
+      this.scene.createBalls(enemyAmount);
       requestAnimationFrame(this.step);
     }
   }
